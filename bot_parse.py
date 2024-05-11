@@ -208,11 +208,11 @@ async def data_collection_buttons(
                     service_account_creds=Config.CREDENTIALS
                 ) as wrapper_services:
                     spreadsheet_id = await check_spreadsheet_exist(
-                        wrapper_services, Config.CHANNEL_ID
+                        wrapper_services, channel.value
                     )
                     if not spreadsheet_id:
                         spreadsheet_id, sheet_name = await create_spreadsheet(
-                            wrapper_services, Config.CHANNEL_ID
+                            wrapper_services, channel.value
                         )
                     else:
                         sheet_name = await create_sheet(
@@ -224,7 +224,7 @@ async def data_collection_buttons(
                     )
                     await client.send_message(
                         message.chat.id,
-                        "Информация успешно собрана. Ссылка на файл:"
+                        f"Собрано информации о {total_members} пользователях. Ссылка на файл:"
                         f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}'
                     )
 
