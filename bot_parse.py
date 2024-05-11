@@ -1,6 +1,7 @@
 import os
 from pyrogram import Client, filters
 from settings import Config
+from aiogoogle import Aiogoogle
 from pyrogram.types import Message
 from constants import Commands
 
@@ -15,6 +16,12 @@ from permissions.permissions import (
 from core.admin import create_admin, delete_admin, get_all_admins
 from core.validation import validate_data_on_create, validate_data_on_delete
 from services.get_data_tlg import GetParticipantInfo
+from services.google_api_service import (
+    check_spreadsheet_exist,
+    create_sheet,
+    create_spreadsheet,
+    spreadsheet_update_values
+)
 
 bot_parse = Client(
     "my_account", api_id=Config.API_ID,
@@ -176,7 +183,7 @@ async def data_collection_buttons(
         reply_markup=data_collection_keyboard
     )
 
-    @bot_parse.on_message(filters.regex(Commands.collect_data.value))
+    @bot_parse.on_message(filters.regex(Commands.run_data_collection.value))
     async def parse_channel(
         client: Client,
         message: Message
@@ -197,25 +204,29 @@ async def data_collection_buttons(
                     )
                 member_list = await channel.get_members_channel()
                 total_members = await channel.get_members_count()
-                file_name = "user_data.txt"
-                with open(file_name, "w", encoding="utf-8") as file:
-                    file.write(f"Total Users: {total_members}\n\n")
-                    for user in member_list:
-                        file.write(f"ID: {user['ID']}\n")
-                        file.write(f"Username: {user['Username']}\n")
-                        file.write(f"First Name: {user['First Name']}\n")
-                        file.write(f"Last Name: {user['Last Name']}\n")
-                        file.write(f"Is Bot: {user['Is Bot']}\n")
-                        file.write(f"Joined Date: {user['Joined Date']}\n")
-                        file.write(f"Profile Photo File ID: {user['Profile Photo File ID']}\n")
-                        file.write(f"Phone number: {user['Phone number']}\n")
-                        file.write(f"Language code: {user['Language code']}\n")
-                        file.write(f"Country: {user['Country']}\n\n")
-
-                await client.send_document(message.chat.id, file_name)
-                await client.send_message(
-                    message.chat.id, f"Собрано информации о {total_members} пользователях.")
-                os.remove(file_name)
+                async with Aiogoogle(
+                    service_account_creds=Config.CREDENTIALS
+                ) as wrapper_services:
+                    spreadsheet_id = await check_spreadsheet_exist(
+                        wrapper_services, Config.CHANNEL_ID
+                    )
+                    if not spreadsheet_id:
+                        spreadsheet_id, sheet_name = await create_spreadsheet(
+                            wrapper_services, Config.CHANNEL_ID
+                        )
+                    else:
+                        sheet_name = await create_sheet(
+                            wrapper_services, spreadsheet_id
+                        )
+                    await spreadsheet_update_values(
+                        wrapper_services, spreadsheet_id,
+                        member_list, sheet_name
+                    )
+                    await client.send_message(
+                        message.chat.id,
+                        "Информация успешно собрана. Ссылка на файл:"
+                        f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}'
+                    )
 
 
 # @bot_parse.on_message(filters.command('parsing_count'))

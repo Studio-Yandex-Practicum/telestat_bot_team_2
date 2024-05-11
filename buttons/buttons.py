@@ -3,7 +3,7 @@ from pyrogram.types import (
 )
 
 main_menu_keyboard = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Сбор данных'),
+    [KeyboardButton(text='Cбор данных'),
      KeyboardButton(text='Управление админами')]
 ], resize_keyboard=True)
 
