@@ -15,3 +15,8 @@ class Config(object):
     BOT_TOKEN = os.getenv('BOT_TOKEN_PARSE')
     MY_ID = os.getenv('MY_ID')
     MY_USERNAME = os.getenv('MY_USERNAME')
+    
+
+    BOT_TOKEN_INFO = os.getenv('BOT_TOKEN_INFO')
+    API_HASH_INFO = os.getenv('API_HASH_INFO')
+    API_ID_INFO = os.getenv('API_ID_INFO')
