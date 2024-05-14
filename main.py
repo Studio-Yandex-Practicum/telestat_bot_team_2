@@ -3,7 +3,6 @@ import logging
 import asyncio
 from bot_parse import bot_parse
 from core.init_db import create_super_user
-
 from settings import configure_logging
 
 
