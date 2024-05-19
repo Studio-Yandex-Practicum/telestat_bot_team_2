@@ -12,8 +12,9 @@ from sqlalchemy.orm import (
     declared_attr,
 )
 from settings import (
-    Configs
+    Configs, configure_logging
 )
+logger = configure_logging()
 
 
 class PreBase:
