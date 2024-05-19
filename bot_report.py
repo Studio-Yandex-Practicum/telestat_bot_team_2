@@ -1,7 +1,7 @@
 from pyrogram.client import Client
 from pyrogram import filters
 from pyrogram.types import Message
-from settings import Configs, manager
+from settings import Configs, manager, configure_logging
 from constants import Commands
 from services.google_api_services import (
     get_all_files, get_sheet_lists, get_data_from_lists,
@@ -11,6 +11,8 @@ from services.get_data_tlg import get_activity
 from buttons.buttons import report_menu_keyboard
 
 from permissions.permissions import check_admin
+
+logger = configure_logging()
 
 bot_report = Client(
     'report_acc',
@@ -31,12 +33,14 @@ async def command_start(
             message.chat.id,
             'Управлять ботом могут только Администраторы.'
         )
+        logger.warning(f'Пользователь {message.from_user.username} не прошел авторизацию')
     else:
         await client.send_message(
             message.chat.id,
             'Вы прошли авторизацию!',
             reply_markup=report_menu_keyboard
         )
+        logger.info(f'Пользователь {message.from_user.username} прошел авторизацию')
 
 
 @bot_report.on_message(filters.command('delete_sheet'))
@@ -57,6 +61,7 @@ async def report(
     if not await check_admin(message.from_user.id):
         await client.send_message(
             message.chat.id, 'Сформировать отчет может только админ!')
+        logger.warning(f'Пользователь {message.from_user.username} пытался сформировать отчет')
     else:
         await client.send_message(
             message.chat.id,
@@ -75,6 +80,7 @@ async def all_incoming_messages(
     if manager.set_report_flag[message.from_user.id]:
         manager.report[message.from_user.id] = message.text
         await client.send_message(message.chat.id, 'Идет формирование отчета')
+        logger.info(f'Идет формирование отчета канала {manager.report[message.from_user.id]}')
         files = await get_all_files()
         res = await get_sheet_lists(files[manager.report[message.from_user.id]])
         data = await get_data_from_lists(files[manager.report[message.from_user.id]], res)
@@ -89,5 +95,6 @@ async def all_incoming_messages(
                    f'Среднее количество репостов: {activity["avg_forwards"]}\n'
                    )
         await client.send_message(message.chat.id, msg)
+        logger.info(f'Формирование отчета по каналу {manager.report[message.from_user.id]} завершено')
         del manager.set_report_flag[message.from_user.id]
         del manager.report[message.from_user.id]
