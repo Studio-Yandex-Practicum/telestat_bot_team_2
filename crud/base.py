@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class CRUDBase:
+class CRUDBase: 
     """Базовый класс CRUD"""
 
     def __init__(
