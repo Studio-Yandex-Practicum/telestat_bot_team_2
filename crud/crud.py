@@ -19,13 +19,16 @@ class CRUDBase:
         db_obj = await session.execute(
             select(self.model).where(
                 self.model.user_id == value))
+
         return db_obj.scalars().first()
 
     async def get_multi(
         self,
         session: AsyncSession,
     ):
+        """Получение списка данных всех объектов."""
         db_objs = await session.execute(select(self.model))
+
         return db_objs.scalars().all()
 
     async def create(
@@ -34,11 +37,11 @@ class CRUDBase:
             session: AsyncSession,
     ):
         """Создание объекта в таблице БД"""
-
         db_obj = self.model(**obj)
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
+
         return db_obj
 
     async def update_data(
@@ -48,7 +51,6 @@ class CRUDBase:
             session: AsyncSession,
     ):
         """Обновление значений объекта админа в БД"""
-
         for field in db_obj:
             if field in obj_in:
                 setattr(
@@ -59,6 +61,7 @@ class CRUDBase:
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
+
         return db_obj
 
     async def remove(
@@ -67,7 +70,7 @@ class CRUDBase:
             session: AsyncSession,
     ):
         """Удаление объекта из БД"""
-
         await session.delete(db_obj)
         await session.commit()
+
         return f'Запись админа {db_obj.username} была удалена'
